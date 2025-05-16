@@ -24,9 +24,9 @@ const initApp = () => {
     case "/":
     case "/index.html":
       fetchPopulerMovies();
-      console.log("home");
       break;
     case "/shows.html":
+      fetchPopulerShows();
       console.log("shows");
       break;
     case "/movie-details.html":
@@ -62,16 +62,23 @@ const fetchPopulerMovies = async () => {
   const { results } = await fetchData("movie/popular");
   results.forEach((result) => {
     console.log(result);
-    createCardTxt(allCardsMovies, result);
+    createCardMovie(allCardsMovies, result);
   });
 };
 
-const fetchPopulerShows = (async) => {};
+const fetchPopulerShows = async () => {
+  const { results } = await fetchData("tv/popular");
+  results.forEach((result) => {
+    console.log(result);
+    createCardMovie(allCardsMovies, result);
+  });
+};
 
 document.addEventListener("DOMContentLoaded", initApp);
 
-const createCardTxt = (parentCard, data) => {
+const createCardMovie = (parentCard, data) => {
   const linkDetails = document.createElement("a");
+
   linkDetails.href = `movie-details.html?id=${data.id}`;
   const movieImg = document.createElement("img");
   data.poster_path
@@ -91,7 +98,9 @@ const createCardTxt = (parentCard, data) => {
   const cardDate = document.createElement("p");
   cardtitle.classList.add("card-text");
   const dateRelase = document.createElement("small");
-  dateRelase.textContent = `Release: ${data.release_date}`;
+  data.release_date
+    ? (dateRelase.textContent = `Release: ${data.release_date}`)
+    : (dateRelase.textContent = `Release: ${data.first_air_date}`);
   dateRelase.classList.add("text-muted");
   cardDate.appendChild(dateRelase);
   cardTxt.appendChild(cardtitle);
