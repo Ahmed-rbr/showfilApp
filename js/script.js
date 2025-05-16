@@ -34,10 +34,10 @@ const initApp = () => {
 
   switch (globel.cureentPage) {
     case "/":
-    case "/index.html":
+    case "/index":
       fetchPopulerMovies();
       break;
-    case "/shows.html":
+    case "/shows":
       fetchPopulerShows();
       console.log("shows");
       break;
