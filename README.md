@@ -1,5 +1,7 @@
 # Movie & TV Show Flixx
 
+![Flixx App Screenshot](./images/image.png)
+
 ## Project Overview
 
 This project lets you search for movies and TV shows, browse results with pagination, and view detailed information about each title. You can also add your favorite movies or shows to a personalized favorites page for easy access later. The app uses vanilla JavaScript to dynamically render content and handle user interactions.
