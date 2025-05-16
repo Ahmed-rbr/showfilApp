@@ -5,7 +5,6 @@ document.getElementById(
   "footer-year"
 ).textContent = `© ${new Date().getFullYear()}`;
 
-import { API_KEY } from "../config.js";
 let id = null;
 const globel = {
   cureentPage: window.location.pathname,
@@ -57,15 +56,14 @@ const initApp = () => {
 };
 
 const fetchData = async (endpoint) => {
-  const uri = "https://api.themoviedb.org/3/";
   try {
     showSpinner();
 
     const response = await fetch(
-      `${uri}${endpoint}?api_key=${API_KEY}&language=en-US`
+      `/.netlify/functions/fetchData?endpoint=${endpoint}`
     );
     if (!response.ok) {
-      throw new Error("could not fetch movies data");
+      throw new Error("Could not fetch movies data");
     }
     const data = await response.json();
     hideSpinner();
