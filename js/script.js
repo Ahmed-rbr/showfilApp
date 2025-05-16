@@ -112,7 +112,7 @@ const createCardMovie = (parentCard, data) => {
   const linkDetails = document.createElement("a");
 
   linkDetails.href =
-    globel.cureentPage === "/shows.html"
+    globel.cureentPage === "/shows"
       ? `tv-details.html?id=${data.id}`
       : `movie-details.html?id=${data.id}`;
   const movieImg = document.createElement("img");
