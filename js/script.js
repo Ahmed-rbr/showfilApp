@@ -43,7 +43,7 @@ const initApp = () => {
 
 const fetchData = async (endpoint) => {
   const uri = "https://api.themoviedb.org/3/";
-
+  showSpinner();
   try {
     const response = await fetch(
       `${uri}${endpoint}?api_key=${API_KEY}&language=en-US`
@@ -52,6 +52,7 @@ const fetchData = async (endpoint) => {
       throw new Error("could not fetch movies data");
     }
     const data = await response.json();
+    hideSpinner();
     return data;
   } catch (err) {
     console.error(err);
@@ -72,6 +73,13 @@ const fetchPopulerShows = async () => {
     console.log(result);
     createCardMovie(allCardsMovies, result);
   });
+};
+
+const showSpinner = () => {
+  document.querySelector(".spinner").classList.add("show");
+};
+const hideSpinner = () => {
+  document.querySelector(".spinner").classList.remove("show");
 };
 
 document.addEventListener("DOMContentLoaded", initApp);
