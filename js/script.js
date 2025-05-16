@@ -1,5 +1,6 @@
 const allCardsMovies = document.querySelector(".grid");
 const showDetails = document.getElementById("show-details");
+const movieDetails = document.getElementById("movie-details");
 document.getElementById(
   "footer-year"
 ).textContent = `© ${new Date().getFullYear()}`;
@@ -97,6 +98,7 @@ const fetchPopulerShow = async () => {
 const fetchMovieDetails = async () => {
   const result = await fetchData(`movie/${id}`);
   console.log(result);
+  showmovieDetails(movieDetails, result);
 };
 
 const showSpinner = () => {
@@ -219,8 +221,102 @@ const showTvDetails = (parentElment, data) => {
 
   const companies = data.production_companies.map((companie) => companie.name);
   const copm = companies.join(",");
-  prodComp.textContent = copm;
+  prodComp.textContent = copm || "Unknown";
   detailsbottom.append(showInfo, showStatusInfo, productionCompanies, prodComp);
   parentElment.append(topDetails);
   parentElment.append(detailsbottom);
+};
+
+const showmovieDetails = (parentElement, data) => {
+  const topDetails = document.createElement("div");
+  topDetails.classList.add("details-top");
+
+  const posterDiv = document.createElement("div");
+  const showImg = document.createElement("img");
+  showImg.src = data.poster_path
+    ? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+    : "images/no-image.jpg";
+  showImg.alt = data.title || "Movie Title";
+  showImg.classList.add("card-img-top");
+  posterDiv.appendChild(showImg);
+
+  const wrapper = document.createElement("div");
+
+  const title = document.createElement("h2");
+  title.textContent = data.title;
+
+  const rating = document.createElement("p");
+  rating.innerHTML = `<i class="fas fa-star text-primary"></i> ${Number(
+    data.vote_average.toFixed(1)
+  )} / 10`;
+
+  const releaseDate = document.createElement("p");
+  releaseDate.classList.add("text-muted");
+  releaseDate.textContent = `Release Date: ${data.release_date}`;
+
+  const overview = document.createElement("p");
+  overview.textContent = data.overview;
+
+  const genresHeader = document.createElement("h5");
+  genresHeader.textContent = "Genres";
+
+  const genresList = document.createElement("ul");
+  genresList.classList.add("list-group");
+  data.genres.forEach((genre) => {
+    const li = document.createElement("li");
+    li.textContent = genre.name;
+    genresList.appendChild(li);
+  });
+
+  const homepageBtn = document.createElement("a");
+  homepageBtn.href = data.homepage;
+  homepageBtn.target = "_blank";
+  homepageBtn.classList.add("btn");
+  homepageBtn.textContent = "Visit Movie Homepage";
+
+  wrapper.append(
+    title,
+    rating,
+    releaseDate,
+    overview,
+    genresHeader,
+    genresList,
+    homepageBtn
+  );
+
+  topDetails.append(posterDiv, wrapper);
+
+  const bottomDetails = document.createElement("div");
+  bottomDetails.classList.add("details-bottom");
+
+  const infoHeader = document.createElement("h2");
+  infoHeader.textContent = "Movie Info";
+
+  const infoList = document.createElement("ul");
+
+  const budget = document.createElement("li");
+  budget.innerHTML = `<span class="text-secondary">Budget:</span> $${data.budget.toLocaleString()}`;
+
+  const revenue = document.createElement("li");
+  revenue.innerHTML = `<span class="text-secondary">Revenue:</span> $${data.revenue.toLocaleString()}`;
+
+  const runtime = document.createElement("li");
+  runtime.innerHTML = `<span class="text-secondary">Runtime:</span> ${data.runtime} minutes`;
+
+  const status = document.createElement("li");
+  status.innerHTML = `<span class="text-secondary">Status:</span> ${data.status}`;
+
+  infoList.append(budget, revenue, runtime, status);
+
+  const prodHeader = document.createElement("h4");
+  prodHeader.textContent = "Production Companies";
+
+  const prodList = document.createElement("div");
+  prodList.classList.add("list-group");
+  const companies = data.production_companies.map((c) => c.name).join(", ");
+  prodList.textContent = companies;
+
+  bottomDetails.append(infoHeader, infoList, prodHeader, prodList);
+
+  parentElement.append(topDetails, bottomDetails);
 };
