@@ -1,13 +1,26 @@
 const allCardsMovies = document.querySelector(".grid");
+const swiper = document.querySelector(".swiper-wrapper");
 const showDetails = document.getElementById("show-details");
 const movieDetails = document.getElementById("movie-details");
+const uri = "https://api.themoviedb.org/3/";
+
 document.getElementById(
   "footer-year"
 ).textContent = `© ${new Date().getFullYear()}`;
 
+const API_KEY = "d9dd6ab703d9cdc91ca27c387cd1e5e5";
+//By the way, it's free
+
 let id = null;
 const globel = {
   cureentPage: window.location.pathname,
+  search: {
+    term: "",
+    type: "",
+    page: 1,
+    totalPages: 1,
+    totalResults: 0,
+  },
 };
 
 const highlightActiveLink = () => {
@@ -34,12 +47,14 @@ const initApp = () => {
 
   switch (globel.cureentPage) {
     case "/":
-    case "/index":
+    case "/index.html":
       fetchPopulerMovies();
+      displaySlider();
       break;
-    case "/shows":
+    case "/shows.html":
       fetchPopulerShows();
-      console.log("shows");
+      displaySliderShow();
+
       break;
     case "/movie-details.html":
       getId();
@@ -51,6 +66,10 @@ const initApp = () => {
 
       break;
     case "/search.html":
+      serch();
+      break;
+
+    case "/favorites.html":
       break;
   }
 };
@@ -60,10 +79,10 @@ const fetchData = async (endpoint) => {
     showSpinner();
 
     const response = await fetch(
-      `/.netlify/functions/fetchData?endpoint=${endpoint}`
+      `${uri}${endpoint}?api_key=${API_KEY}&language=en-US`
     );
     if (!response.ok) {
-      throw new Error("Could not fetch movies data");
+      throw new Error("could not fetch movies data");
     }
     const data = await response.json();
     hideSpinner();
@@ -90,11 +109,13 @@ const fetchPopulerShows = async () => {
 const fetchPopulerShow = async () => {
   const result = await fetchData(`tv/${id}`);
   console.log(result);
+  showBackdrop("show", result.backdrop_path);
 
   showTvDetails(showDetails, result);
 };
 const fetchMovieDetails = async () => {
   const result = await fetchData(`movie/${id}`);
+  showBackdrop("movie", result.backdrop_path);
   console.log(result);
   showmovieDetails(movieDetails, result);
 };
@@ -105,14 +126,33 @@ const showSpinner = () => {
 const hideSpinner = () => {
   document.querySelector(".spinner").classList.remove("show");
 };
+const showBackdrop = (type, background) => {
+  const overlayDiv = document.createElement("div");
+  overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${background})`;
+  overlayDiv.style.backgroundSize = "cover";
+  overlayDiv.style.backgroundPosition = "center";
+  overlayDiv.style.backgroundRepeat = "no-repeat";
+  overlayDiv.style.height = "100vh";
+  overlayDiv.style.width = "100vw";
+  overlayDiv.style.position = "absolute";
+  overlayDiv.style.top = "0";
+  overlayDiv.style.left = "0";
+  overlayDiv.style.zIndex = "-1";
+  overlayDiv.style.opacity = "0.15";
+
+  if (type === "movie") {
+    document.querySelector("#movie-details").appendChild(overlayDiv);
+  } else {
+    document.querySelector("#show-details").appendChild(overlayDiv);
+  }
+};
 
 document.addEventListener("DOMContentLoaded", initApp);
 
-const createCardMovie = (parentCard, data) => {
+const createCardMovie = (parentCard, data, pagenation = "") => {
   const linkDetails = document.createElement("a");
-
   linkDetails.href =
-    globel.cureentPage === "/shows"
+    globel.cureentPage === "/shows.html"
       ? `tv-details.html?id=${data.id}`
       : `movie-details.html?id=${data.id}`;
   const movieImg = document.createElement("img");
@@ -145,7 +185,6 @@ const createCardMovie = (parentCard, data) => {
 
   card.appendChild(linkDetails);
   card.appendChild(cardTxt);
-
   parentCard.appendChild(card);
 };
 
@@ -168,6 +207,7 @@ const showTvDetails = (parentElment, data) => {
     data.vote_average.toFixed(2)
   )} / 10
 `;
+
   const firstAir = document.createElement("p");
   firstAir.textContent = `Release: ${data.first_air_date}`;
   const overview = document.createElement("p");
@@ -224,7 +264,69 @@ const showTvDetails = (parentElment, data) => {
   parentElment.append(topDetails);
   parentElment.append(detailsbottom);
 };
+const displaySlider = async () => {
+  const { results } = await fetchData("movie/now_playing");
+  results.forEach((result) => {
+    movieSlides(swiper, result);
+  });
+  initSwiper();
+};
 
+const displaySliderShow = async () => {
+  const { results } = await fetchData("tv/airing_today");
+
+  results.forEach((result) => {
+    movieSlides(swiper, result);
+  });
+  initSwiper();
+};
+
+const movieSlides = (parentElment, data) => {
+  const slide = document.createElement("div");
+  slide.classList.add("swiper-slide");
+  const movielink = document.createElement("a");
+  movielink.href = `tv-details.html?id=${data.id}`;
+
+  const slideImg = document.createElement("img");
+  slideImg.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+  slideImg.alt = "tv show image";
+  movielink.appendChild(slideImg);
+  const slideRating = document.createElement("h4");
+  slideRating.classList.add("swiper-rating");
+  slideRating.innerHTML = `<i class="fas fa-star text-secondary"></i> ${data.vote_average.toFixed(
+    2
+  )} / 10
+
+`;
+
+  slide.append(movielink, slideRating);
+  parentElment.appendChild(slide);
+};
+
+const initSwiper = () => {
+  const swiper = new Swiper(".swiper", {
+    slidesPreView: 1,
+    spaceBetween: 30,
+    freeMode: true,
+    loop: true,
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+
+    breakpoints: {
+      500: {
+        slidesPerView: 2,
+      },
+      700: {
+        slidesPerView: 3,
+      },
+      1200: {
+        slidesPerView: 4,
+      },
+    },
+  });
+};
 const showmovieDetails = (parentElement, data) => {
   const topDetails = document.createElement("div");
   topDetails.classList.add("details-top");
@@ -317,4 +419,143 @@ const showmovieDetails = (parentElement, data) => {
   bottomDetails.append(infoHeader, infoList, prodHeader, prodList);
 
   parentElement.append(topDetails, bottomDetails);
+};
+const showAlert = (msg, className = "err") => {
+  const alertEl = document.createElement("div");
+  alertEl.classList.add("alert", className);
+  alertEl.appendChild(document.createTextNode(msg));
+  document.querySelector("#alert").appendChild(alertEl);
+  setTimeout(() => {
+    alertEl.remove();
+  }, 2000);
+};
+
+const searchAPIData = async () => {
+  try {
+    showSpinner();
+    const response = await fetch(
+      `${uri}search/${globel.search.type}?api_key=${API_KEY}&language=en-US&query=${globel.search.term}&page=${globel.search.page}`
+    );
+    if (!response.ok) {
+      throw new Error("couldn't fetch respons");
+    }
+
+    const data = await response.json();
+    hideSpinner();
+
+    return data;
+  } catch (err) {
+    console.error(err);
+  }
+};
+const serch = async () => {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  globel.search.type = urlParams.get("type");
+  globel.search.term = urlParams.get("search-term");
+
+  if (
+    globel.search.term !== "" &&
+    globel.search.type !== "" &&
+    globel.search.term !== null
+  ) {
+    globel.search.page = 1;
+
+    const { results, total_pages, page, total_results } = await searchAPIData();
+    globel.search.page = page;
+    globel.search.totalPages = total_pages;
+    globel.search.totalResults = total_results;
+
+    allCardsMovies.innerHTML = "";
+
+    if (results.length === 0) {
+      showAlert("0 Results found");
+      return;
+    }
+
+    showAlert(`${results.length} Results found`, "success");
+    showResults(results);
+
+    results.forEach((result) => {
+      createCardMovie(allCardsMovies, result);
+    });
+
+    if (total_pages > 1) {
+      displayPagination();
+    }
+
+    document.querySelector("#search-term").value = "";
+  } else {
+    showAlert("please enter a search term");
+  }
+};
+
+const displayPagination = () => {
+  document.querySelector("#pagination").innerHTML = "";
+
+  const pagenation = document.createElement("div");
+
+  pagenation.classList.add("pagination");
+
+  pagenation.innerHTML = `
+     <button class="btn btn-primary" id="prev">Prev</button>
+          <button class="btn btn-primary next" id="next">Next</button>
+          <div class="page-counter">Page ${globel.search.page} of ${globel.search.totalPages}</div>
+        `;
+
+  document.querySelector("#pagination").appendChild(pagenation);
+  updaBtn();
+  document.querySelector("#next").addEventListener("click", async () => {
+    if (globel.search.page < globel.search.totalPages) {
+      globel.search.page++;
+      const { results, totalPages } = await searchAPIData();
+      allCardsMovies.innerHTML = "";
+
+      results.forEach((result) => {
+        createCardMovie(allCardsMovies, result);
+        console.log(globel.search.page);
+      });
+      updatePaginationDisplay();
+      updaBtn();
+    }
+  });
+
+  document.querySelector("#prev").addEventListener("click", async () => {
+    if (globel.search.page > 1) {
+      globel.search.page--;
+      const { results, totalPages } = await searchAPIData();
+
+      allCardsMovies.innerHTML = "";
+      showResults(results);
+      results.forEach((result) => {
+        createCardMovie(allCardsMovies, result);
+      });
+
+      updatePaginationDisplay();
+      updaBtn();
+    }
+  });
+};
+const updatePaginationDisplay = () => {
+  const pageCounter = document.querySelector(".page-counter");
+  if (pageCounter) {
+    pageCounter.textContent = `Page ${globel.search.page} of ${globel.search.totalPages}`;
+  }
+};
+const showResults = (data) => {
+  document.querySelector("#search-results-heading").innerHTML = `
+  <h2>  ${globel.search.totalResults} Results for ${globel.search.term}</h2>`;
+};
+
+const updaBtn = () => {
+  const prevBtn = document.querySelector("#prev");
+  const nextBtn = document.querySelector("#next");
+
+  if (prevBtn) {
+    prevBtn.disabled = globel.search.page === 1;
+  }
+
+  if (nextBtn) {
+    nextBtn.disabled = globel.search.page === globel.search.totalPages;
+  }
 };
