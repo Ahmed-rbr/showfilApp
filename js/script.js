@@ -8,7 +8,9 @@ document.getElementById(
   "footer-year"
 ).textContent = `© ${new Date().getFullYear()}`;
 
-import { API_KEY } from "../config.js";
+const API_KEY = "d9dd6ab703d9cdc91ca27c387cd1e5e5";
+//By the way, it's free
+
 let id = null;
 const globel = {
   cureentPage: window.location.pathname,
@@ -17,6 +19,7 @@ const globel = {
     type: "",
     page: 1,
     totalPages: 1,
+    totalResults: 0,
   },
 };
 
@@ -146,9 +149,8 @@ const showBackdrop = (type, background) => {
 
 document.addEventListener("DOMContentLoaded", initApp);
 
-const createCardMovie = (parentCard, data) => {
+const createCardMovie = (parentCard, data, pagenation = "") => {
   const linkDetails = document.createElement("a");
-
   linkDetails.href =
     globel.cureentPage === "/shows.html"
       ? `tv-details.html?id=${data.id}`
@@ -183,7 +185,6 @@ const createCardMovie = (parentCard, data) => {
 
   card.appendChild(linkDetails);
   card.appendChild(cardTxt);
-
   parentCard.appendChild(card);
 };
 
@@ -419,7 +420,7 @@ const showmovieDetails = (parentElement, data) => {
 
   parentElement.append(topDetails, bottomDetails);
 };
-const showAlert = (msg, className) => {
+const showAlert = (msg, className = "err") => {
   const alertEl = document.createElement("div");
   alertEl.classList.add("alert", className);
   alertEl.appendChild(document.createTextNode(msg));
@@ -433,7 +434,7 @@ const searchAPIData = async () => {
   try {
     showSpinner();
     const response = await fetch(
-      `${uri}search/${globel.search.type}?api_key=${API_KEY}&language=en-US&query=${globel.search.term}`
+      `${uri}search/${globel.search.type}?api_key=${API_KEY}&language=en-US&query=${globel.search.term}&page=${globel.search.page}`
     );
     if (!response.ok) {
       throw new Error("couldn't fetch respons");
@@ -452,13 +453,109 @@ const serch = async () => {
   const urlParams = new URLSearchParams(queryString);
   globel.search.type = urlParams.get("type");
   globel.search.term = urlParams.get("search-term");
-  if (globel.search.term !== "" && globel.search.type !== "") {
-    const { results } = await searchAPIData();
+
+  if (
+    globel.search.term !== "" &&
+    globel.search.type !== "" &&
+    globel.search.term !== null
+  ) {
+    globel.search.page = 1;
+
+    const { results, total_pages, page, total_results } = await searchAPIData();
+    globel.search.page = page;
+    globel.search.totalPages = total_pages;
+    globel.search.totalResults = total_results;
+
+    allCardsMovies.innerHTML = "";
+
+    if (results.length === 0) {
+      showAlert("0 Results found");
+      return;
+    }
+
+    showAlert(`${results.length} Results found`, "success");
+    showResults(results);
+
     results.forEach((result) => {
       createCardMovie(allCardsMovies, result);
     });
-    console.log(results);
+
+    if (total_pages > 1) {
+      displayPagination();
+    }
+
+    document.querySelector("#search-term").value = "";
   } else {
     showAlert("please enter a search term");
+  }
+};
+
+const displayPagination = () => {
+  document.querySelector("#pagination").innerHTML = "";
+
+  const pagenation = document.createElement("div");
+
+  pagenation.classList.add("pagination");
+
+  pagenation.innerHTML = `
+     <button class="btn btn-primary" id="prev">Prev</button>
+          <button class="btn btn-primary next" id="next">Next</button>
+          <div class="page-counter">Page ${globel.search.page} of ${globel.search.totalPages}</div>
+        `;
+
+  document.querySelector("#pagination").appendChild(pagenation);
+  updaBtn();
+  document.querySelector("#next").addEventListener("click", async () => {
+    if (globel.search.page < globel.search.totalPages) {
+      globel.search.page++;
+      const { results, totalPages } = await searchAPIData();
+      allCardsMovies.innerHTML = "";
+
+      results.forEach((result) => {
+        createCardMovie(allCardsMovies, result);
+        console.log(globel.search.page);
+      });
+      updatePaginationDisplay();
+      updaBtn();
+    }
+  });
+
+  document.querySelector("#prev").addEventListener("click", async () => {
+    if (globel.search.page > 1) {
+      globel.search.page--;
+      const { results, totalPages } = await searchAPIData();
+
+      allCardsMovies.innerHTML = "";
+      showResults(results);
+      results.forEach((result) => {
+        createCardMovie(allCardsMovies, result);
+      });
+
+      updatePaginationDisplay();
+      updaBtn();
+    }
+  });
+};
+const updatePaginationDisplay = () => {
+  const pageCounter = document.querySelector(".page-counter");
+  if (pageCounter) {
+    pageCounter.textContent = `Page ${globel.search.page} of ${globel.search.totalPages}`;
+  }
+};
+const showResults = (data) => {
+  document.querySelector("#search-results-heading").innerHTML = `
+  <h2>  ${globel.search.totalResults} Results for ${globel.search.term}</h2>`;
+};
+
+const updaBtn = () => {
+  const prevBtn = document.querySelector("#prev");
+  const nextBtn = document.querySelector("#next");
+
+  if (prevBtn) {
+    prevBtn.disabled = globel.search.page === 1;
+  }
+
+  if (nextBtn) {
+    nextBtn.disabled = globel.search.page === globel.search.totalPages;
   }
 };

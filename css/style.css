@@ -343,7 +343,6 @@ section h2 {
 }
 
 .alert {
-  background: red;
   padding: 10px 20px;
   margin-bottom: 20px;
   border-radius: 5px;
@@ -353,11 +352,11 @@ section h2 {
   text-align: center;
   margin: 36px auto;
 }
-.alert-success {
+.success {
   background: green;
 }
 
-.alert-error {
+.err {
   background: red;
 }
 
