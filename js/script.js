@@ -2,6 +2,8 @@ const allCardsMovies = document.querySelector(".grid");
 const swiper = document.querySelector(".swiper-wrapper");
 const showDetails = document.getElementById("show-details");
 const movieDetails = document.getElementById("movie-details");
+const uri = "https://api.themoviedb.org/3/";
+
 document.getElementById(
   "footer-year"
 ).textContent = `© ${new Date().getFullYear()}`;
@@ -10,6 +12,12 @@ import { API_KEY } from "../config.js";
 let id = null;
 const globel = {
   cureentPage: window.location.pathname,
+  search: {
+    term: "",
+    type: "",
+    page: 1,
+    totalPages: 1,
+  },
 };
 
 const highlightActiveLink = () => {
@@ -55,6 +63,7 @@ const initApp = () => {
 
       break;
     case "/search.html":
+      serch();
       break;
 
     case "/favorites.html":
@@ -63,7 +72,6 @@ const initApp = () => {
 };
 
 const fetchData = async (endpoint) => {
-  const uri = "https://api.themoviedb.org/3/";
   try {
     showSpinner();
 
@@ -410,4 +418,47 @@ const showmovieDetails = (parentElement, data) => {
   bottomDetails.append(infoHeader, infoList, prodHeader, prodList);
 
   parentElement.append(topDetails, bottomDetails);
+};
+const showAlert = (msg, className) => {
+  const alertEl = document.createElement("div");
+  alertEl.classList.add("alert", className);
+  alertEl.appendChild(document.createTextNode(msg));
+  document.querySelector("#alert").appendChild(alertEl);
+  setTimeout(() => {
+    alertEl.remove();
+  }, 2000);
+};
+
+const searchAPIData = async () => {
+  try {
+    showSpinner();
+    const response = await fetch(
+      `${uri}search/${globel.search.type}?api_key=${API_KEY}&language=en-US&query=${globel.search.term}`
+    );
+    if (!response.ok) {
+      throw new Error("couldn't fetch respons");
+    }
+
+    const data = await response.json();
+    hideSpinner();
+
+    return data;
+  } catch (err) {
+    console.error(err);
+  }
+};
+const serch = async () => {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  globel.search.type = urlParams.get("type");
+  globel.search.term = urlParams.get("search-term");
+  if (globel.search.term !== "" && globel.search.type !== "") {
+    const { results } = await searchAPIData();
+    results.forEach((result) => {
+      createCardMovie(allCardsMovies, result);
+    });
+    console.log(results);
+  } else {
+    showAlert("please enter a search term");
+  }
 };
