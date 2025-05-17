@@ -1,4 +1,5 @@
 const allCardsMovies = document.querySelector(".grid");
+const swiper = document.querySelector(".swiper-wrapper");
 const showDetails = document.getElementById("show-details");
 const movieDetails = document.getElementById("movie-details");
 document.getElementById(
@@ -37,10 +38,12 @@ const initApp = () => {
     case "/":
     case "/index.html":
       fetchPopulerMovies();
+      displaySlider();
       break;
     case "/shows.html":
       fetchPopulerShows();
-      console.log("shows");
+      displaySliderShow();
+
       break;
     case "/movie-details.html":
       getId();
@@ -124,7 +127,7 @@ const showBackdrop = (type, background) => {
   overlayDiv.style.top = "0";
   overlayDiv.style.left = "0";
   overlayDiv.style.zIndex = "-1";
-  overlayDiv.style.opacity = "0.1";
+  overlayDiv.style.opacity = "0.15";
 
   if (type === "movie") {
     document.querySelector("#movie-details").appendChild(overlayDiv);
@@ -195,6 +198,7 @@ const showTvDetails = (parentElment, data) => {
     data.vote_average.toFixed(2)
   )} / 10
 `;
+
   const firstAir = document.createElement("p");
   firstAir.textContent = `Release: ${data.first_air_date}`;
   const overview = document.createElement("p");
@@ -251,7 +255,69 @@ const showTvDetails = (parentElment, data) => {
   parentElment.append(topDetails);
   parentElment.append(detailsbottom);
 };
+const displaySlider = async () => {
+  const { results } = await fetchData("movie/now_playing");
+  results.forEach((result) => {
+    movieSlides(swiper, result);
+  });
+  initSwiper();
+};
 
+const displaySliderShow = async () => {
+  const { results } = await fetchData("tv/airing_today");
+
+  results.forEach((result) => {
+    movieSlides(swiper, result);
+  });
+  initSwiper();
+};
+
+const movieSlides = (parentElment, data) => {
+  const slide = document.createElement("div");
+  slide.classList.add("swiper-slide");
+  const movielink = document.createElement("a");
+  movielink.href = `tv-details.html?id=${data.id}`;
+
+  const slideImg = document.createElement("img");
+  slideImg.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+  slideImg.alt = "tv show image";
+  movielink.appendChild(slideImg);
+  const slideRating = document.createElement("h4");
+  slideRating.classList.add("swiper-rating");
+  slideRating.innerHTML = `<i class="fas fa-star text-secondary"></i> ${data.vote_average.toFixed(
+    2
+  )} / 10
+
+`;
+
+  slide.append(movielink, slideRating);
+  parentElment.appendChild(slide);
+};
+
+const initSwiper = () => {
+  const swiper = new Swiper(".swiper", {
+    slidesPreView: 1,
+    spaceBetween: 30,
+    freeMode: true,
+    loop: true,
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+
+    breakpoints: {
+      500: {
+        slidesPerView: 2,
+      },
+      700: {
+        slidesPerView: 3,
+      },
+      1200: {
+        slidesPerView: 4,
+      },
+    },
+  });
+};
 const showmovieDetails = (parentElement, data) => {
   const topDetails = document.createElement("div");
   topDetails.classList.add("details-top");
