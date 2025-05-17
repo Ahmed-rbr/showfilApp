@@ -473,7 +473,7 @@ const serch = async () => {
       return;
     }
 
-    showAlert(`${results.length} Results found`, "success");
+    showAlert(`${globel.search.totalPages} Results found`, "success");
     showResults(results);
 
     results.forEach((result) => {
