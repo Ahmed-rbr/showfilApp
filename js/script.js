@@ -5,6 +5,7 @@ document.getElementById(
   "footer-year"
 ).textContent = `© ${new Date().getFullYear()}`;
 
+import { API_KEY } from "../config.js";
 let id = null;
 const globel = {
   cureentPage: window.location.pathname,
@@ -34,10 +35,10 @@ const initApp = () => {
 
   switch (globel.cureentPage) {
     case "/":
-    case "/index":
+    case "/index.html":
       fetchPopulerMovies();
       break;
-    case "/shows":
+    case "/shows.html":
       fetchPopulerShows();
       console.log("shows");
       break;
@@ -52,18 +53,22 @@ const initApp = () => {
       break;
     case "/search.html":
       break;
+
+    case "/favorites.html":
+      break;
   }
 };
 
 const fetchData = async (endpoint) => {
+  const uri = "https://api.themoviedb.org/3/";
   try {
     showSpinner();
 
     const response = await fetch(
-      `/.netlify/functions/fetchData?endpoint=${endpoint}`
+      `${uri}${endpoint}?api_key=${API_KEY}&language=en-US`
     );
     if (!response.ok) {
-      throw new Error("Could not fetch movies data");
+      throw new Error("could not fetch movies data");
     }
     const data = await response.json();
     hideSpinner();
@@ -90,11 +95,13 @@ const fetchPopulerShows = async () => {
 const fetchPopulerShow = async () => {
   const result = await fetchData(`tv/${id}`);
   console.log(result);
+  showBackdrop("show", result.backdrop_path);
 
   showTvDetails(showDetails, result);
 };
 const fetchMovieDetails = async () => {
   const result = await fetchData(`movie/${id}`);
+  showBackdrop("movie", result.backdrop_path);
   console.log(result);
   showmovieDetails(movieDetails, result);
 };
@@ -105,6 +112,26 @@ const showSpinner = () => {
 const hideSpinner = () => {
   document.querySelector(".spinner").classList.remove("show");
 };
+const showBackdrop = (type, background) => {
+  const overlayDiv = document.createElement("div");
+  overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${background})`;
+  overlayDiv.style.backgroundSize = "cover";
+  overlayDiv.style.backgroundPosition = "center";
+  overlayDiv.style.backgroundRepeat = "no-repeat";
+  overlayDiv.style.height = "100vh";
+  overlayDiv.style.width = "100vw";
+  overlayDiv.style.position = "absolute";
+  overlayDiv.style.top = "0";
+  overlayDiv.style.left = "0";
+  overlayDiv.style.zIndex = "-1";
+  overlayDiv.style.opacity = "0.1";
+
+  if (type === "movie") {
+    document.querySelector("#movie-details").appendChild(overlayDiv);
+  } else {
+    document.querySelector("#show-details").appendChild(overlayDiv);
+  }
+};
 
 document.addEventListener("DOMContentLoaded", initApp);
 
@@ -112,7 +139,7 @@ const createCardMovie = (parentCard, data) => {
   const linkDetails = document.createElement("a");
 
   linkDetails.href =
-    globel.cureentPage === "/shows"
+    globel.cureentPage === "/shows.html"
       ? `tv-details.html?id=${data.id}`
       : `movie-details.html?id=${data.id}`;
   const movieImg = document.createElement("img");

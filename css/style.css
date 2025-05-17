@@ -323,6 +323,12 @@ section h2 {
   color: #000;
 }
 
+.cardf {
+  max-width: 420px;
+}
+.gridF {
+  margin-bottom: 36px;
+}
 .search .container form button:hover {
   background: transparent;
   color: #fff;
@@ -342,7 +348,11 @@ section h2 {
   margin-bottom: 20px;
   border-radius: 5px;
 }
-
+.title {
+  width: 100%;
+  text-align: center;
+  margin: 36px auto;
+}
 .alert-success {
   background: green;
 }
@@ -355,5 +365,8 @@ section h2 {
   .details-top {
     flex-direction: column;
     gap: 10px;
+  }
+  .main-footer {
+    width: 100%;
   }
 }
