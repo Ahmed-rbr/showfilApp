@@ -51,7 +51,7 @@ const initApp = () => {
       fetchPopulerMovies();
       displaySlider();
       break;
-    case "/shows.html":
+    case "/shows":
       fetchPopulerShows();
       displaySliderShow();
 
